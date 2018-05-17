@@ -124,10 +124,10 @@ const games = (state = defaultState, action) => {
         case GAME_WON:
             const rankingByWins = Object.assign({}, state.rankingByWins);
             const rankingByAmountWon = Object.assign({}, state.rankingByAmountWon);
-            const winningsInEther = action.winnings.dividedBy(1e18);
+            const winningsInEther = action.winnings.dividedBy(1e18).toNumber();
             if (rankingByWins[action.winner]) {
                 rankingByWins[action.winner] += 1;
-                rankingByAmountWon[action.winner] = rankingByAmountWon[action.winner].add(winningsInEther);
+                rankingByAmountWon[action.winner] += winningsInEther;
             } else {
                 rankingByWins[action.winner] = 1;
                 rankingByAmountWon[action.winner] = winningsInEther;

@@ -63,11 +63,11 @@ class App extends Component {
     componentDidMount() {
         // Get network provider and web3 instance. See actions/index.js => web3connect
         // for more info.
-        window.addEventListener('load', () => this.init());
+        // window.addEventListener('load', () => this.init());
+        this.init();
     }
 
     init(hostname = defaultHostname) {
-        console.log()
         try {
             this.props.web3connect(hostname);
 
@@ -347,7 +347,7 @@ class App extends Component {
 
     renderRankingTable(ranking) {
         if (ranking) {
-            ranking = Object.keys(ranking).map(prop => [prop, ranking[prop].toString()]);
+            ranking = Object.keys(ranking).map(prop => [prop, ranking[prop]]);
             ranking.sort((a, b) => a[1] < b[1] ? 1 : -1);
 
             return ranking.map(item => {
