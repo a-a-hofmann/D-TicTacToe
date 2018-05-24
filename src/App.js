@@ -10,6 +10,7 @@ import AccountSelect from './components/AccountSelect';
 import CurrentGameInformation from './components/CurrentGameInformation';
 import { CurrencyUnitSelect, WEI, ETHER } from './components/CurrencyUnitSelect';
 import Header from './components/Header';
+import Loadable from 'react-loading-overlay';
 
 import './css/oswald.css'
 import './css/open-sans.css'
@@ -49,6 +50,8 @@ class App extends Component {
             activeTab: TAB_GAMES,
             activeGame: -1,
             nodeName: defaultHostname,
+            creatingGame: false,
+            joiningGame: {},
         };
 
         this
@@ -182,11 +185,18 @@ class App extends Component {
                         <td>{game.status}</td>
                         <td>{(game.fee ? `${game.fee.toString()}%` : '-')} {game.fee ? `${game.commissions}Ξ` : ''}</td>
                         <td>
+                        
+                        <Loadable
+                                                    active={this.state.joiningGame[game.id]}
+                                                    spinner
+                                                    text=''
+                                                    >
                             <button
                                 className={buttonClass}
                                 disabled={!this.isGameJoinable(game)}
                                 onClick={() => this.joinGame(game, game.bet)}>Join
                             </button>
+                        </Loadable>
                         </td>
                         <td>
                             <button className={"btn"} onClick={() => this.getGame(game.id)}>View</button>
@@ -210,12 +220,18 @@ class App extends Component {
             this.setState({activeGame: game.id});
             const isUsingInjectedWeb3 = this.props.isUsingInjectedWeb3;
             if (isUsingInjectedWeb3 || confirm(`Are you sure you want to bet ${bet.dividedBy(1e18).toString()} ether?`)) {
+                let joiningGame = Object.assign({}, this.state.joiningGame);
+                joiningGame[game.id] = true;
+                this.setState({joiningGame});
                 this
                     .props
                     .joinGame(game.id, bet)
                     .then(result => {
                         this.props.fetchGames();
                         this.getGame(game.id);
+                        joiningGame = Object.assign({}, this.state.joiningGame);
+                        joiningGame[game.id] = false;
+                        this.setState({joiningGame});
                     }).catch(error => {
                         console.log(error);
                     });
@@ -247,6 +263,7 @@ class App extends Component {
         const isUsingInjectedWeb3 = this.props.isUsingInjectedWeb3;
 
         if (isUsingInjectedWeb3 || confirm(`Are you sure you want to bet ${this.getBetAmountInEther()} ether?`)) {
+            this.setState({creatingGame: true});
             this
                 .props
                 .addGame(amountToBet)
@@ -254,6 +271,7 @@ class App extends Component {
                     this.props.fetchGames();
                     const gameId = results.logs[0].args.gameId;
                     this.getGame(gameId);
+                    this.setState({creatingGame: false});
                 });
         }
     }
@@ -389,6 +407,8 @@ class App extends Component {
                             <div className="row">
 
                                 <div className="col-md-6">
+                                
+                            
                                     <div className="form-group">
                                         {this.renderAmountToBetLabel()}
                                         <div className="input-group mb-3">
@@ -398,9 +418,15 @@ class App extends Component {
                                                    onChange={(event) => this.onBetAmountChange(event)}
                                                    value={this.state.amountToBet}/>
                                             <div className="input-group-append">
-                                                <button className="btn btn-primary" type="button"
-                                                        onClick={() => this.createGame()}>Create game
-                                                </button>
+                                                <Loadable
+                                                    active={this.state.creatingGame}
+                                                    spinner
+                                                    text=''
+                                                    >
+                                                    <button className="btn btn-primary" type="button"
+                                                            onClick={() => this.createGame()}>Create game
+                                                    </button>
+                                                </Loadable>
                                             </div>
                                         </div>
                                         <p>Amount in Ξ: {this.getBetAmountInEther()}</p>

@@ -1,7 +1,8 @@
 import React, {Component} from 'react'
 
 import {quitGame, playerMove, fetchGames, getGame} from '../actions';
-import {connect} from 'react-redux'
+import {connect} from 'react-redux';
+import Loadable from 'react-loading-overlay';
 
 import './Board.css';
 
@@ -12,6 +13,7 @@ class Board extends Component {
         this.state = {
             squares: Array(9).fill(null),
             account: '',
+            gameLoading: {},
         }
     }
 
@@ -38,8 +40,20 @@ class Board extends Component {
             return;
         }
 
-        this.props.playerMove(currentGame.id, i);
-      }
+        let gameLoading = Object.assign({}, this.state.gameLoading);
+        gameLoading[currentGame.id] = true;
+        this.setState({gameLoading});
+
+        this.props.playerMove(currentGame.id, i)
+            .finally(() => {
+
+                gameLoading = Object.assign({}, this.state.gameLoading);
+                gameLoading[currentGame.id] = false;
+                this.setState({gameLoading});
+            });
+    }
+
+    
     
     renderSquare(i) {
         return (
@@ -97,28 +111,35 @@ class Board extends Component {
     
     render() {
         const isSpectator = !this.props.currentGame.playerName(this.props.currentAccount);
+        const loading = this.state.gameLoading[this.props.currentGame.id];
         return (
             <div>
                 {this.renderStatus()}
-                <table className="game-board">
-                <tbody>
-                    <tr className="board-row">
-                    {this.renderSquare(0)}
-                    {this.renderSquare(1)}
-                    {this.renderSquare(2)}
-                    </tr>
-                    <tr className="board-row">
-                    {this.renderSquare(3)}
-                    {this.renderSquare(4)}
-                    {this.renderSquare(5)}
-                    </tr>
-                    <tr className="board-row">
-                    {this.renderSquare(6)}
-                    {this.renderSquare(7)}
-                    {this.renderSquare(8)}
-                    </tr>
-                </tbody>
-                </table>
+                <Loadable
+                    active={loading}
+                    spinner
+                    text=''
+                    >
+                    <table className="game-board">
+                    <tbody>
+                        <tr className="board-row">
+                        {this.renderSquare(0)}
+                        {this.renderSquare(1)}
+                        {this.renderSquare(2)}
+                        </tr>
+                        <tr className="board-row">
+                        {this.renderSquare(3)}
+                        {this.renderSquare(4)}
+                        {this.renderSquare(5)}
+                        </tr>
+                        <tr className="board-row">
+                        {this.renderSquare(6)}
+                        {this.renderSquare(7)}
+                        {this.renderSquare(8)}
+                        </tr>
+                    </tbody>
+                    </table>
+                </Loadable>
                 <p className={"restart " + (isSpectator ? 'disabled' : '')} onClick={() => this.quit(isSpectator)}>Quit</p>
           </div>
         );
