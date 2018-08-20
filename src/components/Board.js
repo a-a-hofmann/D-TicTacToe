@@ -36,7 +36,7 @@ class Board extends Component {
         const currentGame = this.props.currentGame;
 
         // Game finished or cell already filled.
-        if (currentGame.isGameOver() || currentGame.isCellOccupied()) {
+        if (currentGame.isGameOver() || currentGame.isCellOccupied(i)) {
             return;
         }
 
